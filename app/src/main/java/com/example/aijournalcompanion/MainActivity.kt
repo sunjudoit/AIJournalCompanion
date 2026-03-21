@@ -23,6 +23,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import com.example.aijournalcompanion.ui.theme.AIJournalCompanionTheme
 
 class MainActivity : ComponentActivity() {
@@ -38,33 +40,33 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+val sample = listOf(
+    JournalEntry ("SADNESS", "😢", "I feel tired and overwhelmed...", "Take a break.", "Mar 12, 2026"),
+    JournalEntry ("JOY", "😊", "Today was amazing!", "Keep smiling!", "Mar 11, 2026")
+)
+
 
 @Preview(showBackground = true)
 @Composable
 fun MainScreen() {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp)
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // title , HELP button
-        HeaderSection()
-        Spacer(modifier = Modifier.height(16.dp))
-
+        item { HeaderSection()}
         // input section
-        JournalInputSection()
-        Spacer(modifier = Modifier.height(16.dp))
-
+        item{JournalInputSection()}
         //result section
-        ResultSection()
-        Spacer(modifier = Modifier.height(16.dp))
+        item{ResultSection()}
 
-        ChartButtonSection()
-        Spacer(modifier = Modifier.height(8.dp))
+        item{ChartButtonSection()}
 
-        SortSection()
-        Spacer(modifier = Modifier.height(8.dp))
+        item{SortSection()}
 
-        SearchSection()
-        Spacer(modifier = Modifier.height(16.dp))
+        item{SearchSection()}
+
+        item{JournalList(cardList = sample)}
 
     }
 
@@ -303,12 +305,65 @@ fun SearchSection(){
         OutlinedTextField(
             value = searchTarget,
             onValueChange = { searchTarget = it },
-            modifier = Modifier.weight(1f).heightIn(max = 40.dp)
+            modifier = Modifier.weight(1f),
+            placeholder = { Text("Type Emotion", fontSize = 12.sp) },
+            singleLine = true
         )
         Button(
             onClick = {}
         ){
             Text(text = "SEARCH")
+        }
+    }
+}
+
+@Composable
+fun JournalList(cardList: List<JournalEntry>){
+    Column {
+        cardList.forEach { card ->
+            JournalCard(card = card)
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+fun JournalCard(card: JournalEntry){
+    OutlinedCard(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            //Emoji, Emotion, Date
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ){
+                Text(text = card.emoji, fontSize = 16.sp)
+                Text(
+                    text = card.emotion,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = card.date,
+                    fontSize = 10.sp
+                )
+
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            // Journal content
+            Text(
+                text = card.content,
+                fontSize = 12.sp,
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            //acvice
+            Text(
+                text = "${card.advice}",
+                fontSize = 11.sp
+            )
         }
     }
 }
