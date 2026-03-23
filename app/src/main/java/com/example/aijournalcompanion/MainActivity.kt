@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import com.example.aijournalcompanion.ui.theme.AIJournalCompanionTheme
 
 class MainActivity : ComponentActivity() {
@@ -49,6 +51,12 @@ val sample = listOf(
 @Preview(showBackground = true)
 @Composable
 fun MainScreen() {
+    var inputContent by remember { mutableStateOf("") }
+    var emotionResult by remember { mutableStateOf("") }
+    var adviceResult by remember { mutableStateOf("") }
+
+    val scope = rememberCoroutineScope()
+
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -56,9 +64,28 @@ fun MainScreen() {
         // title , HELP button
         item { HeaderSection()}
         // input section
-        item{JournalInputSection()}
+        item{JournalInputSection(
+            inputContent = inputContent,
+            onTextChange = {inputContent = it},
+            onAnalyzeClick = {
+                scope.launch {
+                    try{
+                        val response = RetrofitClient.api.analyzeJournal(
+                            AnalyzeRequest(content = inputContent)
+                        )
+                        emotionResult = response.emotion
+                        adviceResult = response.advice
+                    }catch(e: Exception){
+                        emotionResult = "Error"
+                        adviceResult = "Error"
+                    }
+                }
+            }
+        )
+        }
+
         //result section
-        item{ResultSection()}
+        item{ResultSection(emotion = emotionResult, advice = adviceResult)}
 
         item{ChartButtonSection()}
 
@@ -93,9 +120,12 @@ fun HeaderSection() {
     }
 }
 @Composable
-fun JournalInputSection() {
+fun JournalInputSection(
+    inputContent: String,
+    onTextChange: (String) -> Unit,
+    onAnalyzeClick: () -> Unit
+) {
 
-    var inputText by remember { mutableStateOf("") }
     Column{
         //label text
         Text(
@@ -107,15 +137,15 @@ fun JournalInputSection() {
 
         //input textbox
         OutlinedTextField(
-            value = inputText,
-            onValueChange = {inputText = it},
+            value = inputContent,
+            onValueChange = onTextChange,
             modifier = Modifier.fillMaxWidth().height(120.dp)
         )
         Spacer(modifier = Modifier.height(8.dp))
 
         //Analyze button
         Button(
-            onClick = {/*API*/},
+            onClick = onAnalyzeClick,
             modifier = Modifier.align (Alignment.End)
         ){
             Text(text = "ANALYZE")
@@ -123,9 +153,7 @@ fun JournalInputSection() {
     }
 }
 @Composable
-fun ResultSection() {
-    val emotion = "HAPPY"
-    val advice = "Enjoy your day"
+fun ResultSection(emotion:String, advice:String) {
 
     Column{
         //label text
