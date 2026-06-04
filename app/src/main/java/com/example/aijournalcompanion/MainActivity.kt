@@ -28,6 +28,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import com.example.aijournalcompanion.ui.theme.AIJournalCompanionTheme
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,11 +45,24 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-val sample = listOf(
-    JournalEntry ("SADNESS", "😢", "I feel tired and overwhelmed...", "Take a break.", "Mar 12, 2026"),
-    JournalEntry ("JOY", "😊", "Today was amazing!", "Keep smiling!", "Mar 11, 2026")
-)
 
+fun getEmoji(emotion: String): String {
+    return when (emotion.uppercase()) {
+        "HAPPINESS" -> "😊"
+        "SADNESS"   -> "😢"
+        "GRATITUDE" -> "🙏"
+        "ANXIETY"   -> "😰"
+        "ANGER"     -> "😡"
+        "TIREDNESS" -> "😴"
+        "SURPRISE"  -> "😲"
+        else        -> "🤔"
+    }
+}
+
+fun getTodayDate(): String {
+    val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH)
+    return sdf.format(Date())
+}
 
 @Preview(showBackground = true)
 @Composable
@@ -54,6 +70,8 @@ fun MainScreen() {
     var inputContent by remember { mutableStateOf("") }
     var emotionResult by remember { mutableStateOf("") }
     var adviceResult by remember { mutableStateOf("") }
+
+    val journalList = remember { mutableStateListOf<JournalEntry>() }
 
     val scope = rememberCoroutineScope()
 
@@ -75,6 +93,19 @@ fun MainScreen() {
                         )
                         emotionResult = response.emotion
                         adviceResult = response.advice
+
+                        journalList.add(
+                            JournalEntry(
+                                emotion = response.emotion,
+                                emoji   = getEmoji(response.emotion),
+                                content = inputContent,
+                                advice  = response.advice,
+                                date    = getTodayDate()
+                            )
+                        )
+                        inputContent = ""
+
+
                     }catch(e: Exception){
                         emotionResult = "Error"
                         adviceResult = "Error"
@@ -93,7 +124,11 @@ fun MainScreen() {
 
         item{SearchSection()}
 
-        item{JournalList(cardList = sample)}
+        items(journalList) { card ->
+            JournalCard(card = card)
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
 
     }
 
@@ -195,10 +230,7 @@ fun ResultSection(emotion:String, advice:String) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(
-                        text = "😁",
-                        fontSize = 48.sp
-                    )
+                    Text(text = getEmoji(emotion), fontSize = 48.sp)
                 }
             }
         }
