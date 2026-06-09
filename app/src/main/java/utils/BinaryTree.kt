@@ -41,14 +41,12 @@ class BinaryTree {
     ) {
         if (node == null) return
 
-        when {
-            emotion == node.data.emotion.uppercase() -> {
-                result.add(node.data)
-                searchNode(node.left, emotion, result)
-                searchNode(node.right, emotion, result)
-            }
-            emotion < node.data.emotion.uppercase() -> searchNode(node.left, emotion, result)
-            else -> searchNode(node.right, emotion, result)
+        searchNode(node.left, emotion, result)
+
+        if (node.data.emotion.contains(emotion, ignoreCase = true)) {
+            result.add(node.data)
         }
+
+        searchNode(node.right, emotion, result)
     }
 }

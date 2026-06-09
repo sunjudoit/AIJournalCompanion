@@ -31,7 +31,7 @@ class DoublyLinkedList {
         var current = head
 
         while (current != null) {
-            if (current.data.emotion.equals(emotion, ignoreCase = true)) {
+            if (current.data.emotion.contains(emotion, ignoreCase = true)) {
                 result.add(current.data)
             }
             current = current.next

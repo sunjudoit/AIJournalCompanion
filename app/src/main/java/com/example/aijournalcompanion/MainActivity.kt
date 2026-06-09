@@ -33,6 +33,7 @@ import java.util.Date
 import java.util.Locale
 import com.example.aijournalcompanion.utils.SortUtils
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import com.example.aijournalcompanion.utils.SearchUtils
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,6 +75,10 @@ fun MainScreen() {
     var adviceResult by remember { mutableStateOf("") }
 
     val journalList = remember { mutableStateListOf<JournalEntry>() }
+    val searchResultList = remember { mutableStateListOf<JournalEntry>() }
+    var isSearching by remember { mutableStateOf(false) }
+
+    val displayList = if (isSearching) searchResultList else journalList
 
     val scope = rememberCoroutineScope()
 
@@ -128,9 +133,16 @@ fun MainScreen() {
             )
         }
 
-        item{SearchSection()}
+        item {
+            SearchSection(
+                journalList = journalList,
+                searchResultList = searchResultList,
+                onSearchStateChange = { isSearching = it }
+            )
+        }
 
-        items(journalList) { card ->
+
+        items(displayList) { card ->
             JournalCard(card = card)
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -340,8 +352,11 @@ fun SortSection(
 }
 
 @Composable
-fun SearchSection(){
-
+fun SearchSection(
+    journalList: SnapshotStateList<JournalEntry>,
+    searchResultList: SnapshotStateList<JournalEntry>,
+    onSearchStateChange: (Boolean) -> Unit
+) {
     var selectedOption by remember { mutableStateOf("Binary Tree") }
     var expanded by remember { mutableStateOf(false) }
     val searchOptions = listOf("Binary Tree", "HashMap", "Doubly Linked List")
@@ -352,20 +367,19 @@ fun SearchSection(){
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
-
-
-    ){
-        Box{
+    ) {
+        Box {
             OutlinedButton(
-                onClick = {expanded = true}
+                onClick = { expanded = true }
             ) {
                 Text(text = selectedOption, fontSize = 12.sp)
                 Text(text = "▽", fontSize = 12.sp)
             }
+
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
-            ){
+            ) {
                 searchOptions.forEach { option ->
                     DropdownMenuItem(
                         text = { Text(option) },
@@ -374,10 +388,10 @@ fun SearchSection(){
                             expanded = false
                         }
                     )
-
                 }
             }
         }
+
         OutlinedTextField(
             value = searchTarget,
             onValueChange = { searchTarget = it },
@@ -385,9 +399,27 @@ fun SearchSection(){
             placeholder = { Text("Type Emotion", fontSize = 12.sp) },
             singleLine = true
         )
+
         Button(
-            onClick = {}
-        ){
+            onClick = {
+                searchResultList.clear()
+
+                if (searchTarget.isBlank()) {
+                    onSearchStateChange(false)
+                    return@Button
+                }
+
+                val result = when (selectedOption) {
+                    "Binary Tree" -> SearchUtils.searchWithBinaryTree(journalList, searchTarget)
+                    "HashMap" -> SearchUtils.searchWithHashMap(journalList, searchTarget)
+                    "Doubly Linked List" -> SearchUtils.searchWithDoublyLinkedList(journalList, searchTarget)
+                    else -> emptyList()
+                }
+
+                searchResultList.addAll(result)
+                onSearchStateChange(true)
+            }
+        ) {
             Text(text = "SEARCH")
         }
     }
