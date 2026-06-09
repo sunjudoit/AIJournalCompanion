@@ -31,6 +31,8 @@ import com.example.aijournalcompanion.ui.theme.AIJournalCompanionTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.example.aijournalcompanion.utils.SortUtils
+import androidx.compose.runtime.snapshots.SnapshotStateList
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -120,7 +122,11 @@ fun MainScreen() {
 
         item{ChartButtonSection()}
 
-        item{SortSection()}
+        item {
+            SortSection(
+                journalList = journalList
+            )
+        }
 
         item{SearchSection()}
 
@@ -277,7 +283,9 @@ fun ChartButtonSection(){
 }
 
 @Composable
-fun SortSection(){
+fun SortSection(
+    journalList: SnapshotStateList<JournalEntry>
+) {
     var selectedOption by remember { mutableStateOf("Bubble Sort") }
     var expanded by remember { mutableStateOf(false) }
     val sortOptions = listOf("Bubble Sort", "Insertion Sort", "Selection Sort")
@@ -286,8 +294,7 @@ fun SortSection(){
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
-    ){
-        //Sort dropdown button
+    ) {
         Box(modifier = Modifier.weight(1f)) {
             OutlinedButton(
                 onClick = { expanded = true },
@@ -296,8 +303,8 @@ fun SortSection(){
                 Text(text = selectedOption, fontSize = 12.sp)
                 Spacer(modifier = Modifier.weight(1f))
                 Text(text = "▽", fontSize = 12.sp)
-
             }
+
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
@@ -310,14 +317,23 @@ fun SortSection(){
                             expanded = false
                         }
                     )
-
                 }
-
             }
         }
+
         Button(
-            onClick = {}
-        ){
+            onClick = {
+                val sortedList = when (selectedOption) {
+                    "Bubble Sort" -> SortUtils.bubbleSort(journalList)
+                    "Insertion Sort" -> SortUtils.insertionSort(journalList)
+                    "Selection Sort" -> SortUtils.selectionSort(journalList)
+                    else -> journalList
+                }
+
+                journalList.clear()
+                journalList.addAll(sortedList)
+            }
+        ) {
             Text(text = "SORT")
         }
     }

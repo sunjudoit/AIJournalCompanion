@@ -7,6 +7,7 @@ import retrofit2.http.POST
 data class AnalyzeRequest(
     val content: String
 )
+
 //receive from backend
 data class AnalyzeResponse(
     val emotion: String,
@@ -16,5 +17,5 @@ data class AnalyzeResponse(
 //api interface
 interface ApiService {
     @POST("analyze")
-    suspend fun analyzeJournal(@Body request: AnalyzeRequest):AnalyzeResponse
+    suspend fun analyzeJournal(@Body request: AnalyzeRequest): AnalyzeResponse
 }
