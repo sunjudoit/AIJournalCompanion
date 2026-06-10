@@ -34,6 +34,9 @@ import java.util.Locale
 import com.example.aijournalcompanion.utils.SortUtils
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.example.aijournalcompanion.utils.SearchUtils
+import com.example.aijournalcompanion.ui.PieChartDialog
+import androidx.compose.ui.platform.LocalContext
+import com.example.aijournalcompanion.ui.HelpDialog
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,12 +85,27 @@ fun MainScreen() {
 
     val scope = rememberCoroutineScope()
 
+    var showChartDialog by remember {
+        mutableStateOf(false)
+    }
+
+    var showHelpDialog by remember {
+        mutableStateOf(false)
+    }
+    val context = LocalContext.current
+
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // title , HELP button
-        item { HeaderSection()}
+        item {
+            HeaderSection(
+                onHelpClick = {
+                    showHelpDialog = true
+                }
+            )
+        }
         // input section
         item{JournalInputSection(
             inputContent = inputContent,
@@ -122,10 +140,15 @@ fun MainScreen() {
         )
         }
 
+
         //result section
         item{ResultSection(emotion = emotionResult, advice = adviceResult)}
 
-        item{ChartButtonSection()}
+        item {
+            ChartButtonSection(
+                onChartClick = { showChartDialog = true }
+            )
+        }
 
         item {
             SortSection(
@@ -149,26 +172,46 @@ fun MainScreen() {
 
 
     }
+    if (showChartDialog) {
+        PieChartDialog(
+            journalList = journalList,
+            onDismiss = { showChartDialog = false }
+        )
+    }
+
+    if (showHelpDialog) {
+
+        HelpDialog(
+            context = context,
+            onDismiss = {
+                showHelpDialog = false
+            }
+        )
+    }
 
 }
 
 
 @Composable
-fun HeaderSection() {
+fun HeaderSection(
+    onHelpClick: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
-    ){
+    ) {
+
         Text(
             text = "AI Journal Companion",
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold
         )
+
         Button(
-            onClick ={}
-        ){
-            Text(text = "HELP")
+            onClick = onHelpClick
+        ) {
+            Text("HELP")
         }
     }
 }
@@ -273,22 +316,23 @@ fun ResultSection(emotion:String, advice:String) {
     }
 }
 @Composable
-fun ChartButtonSection(){
+fun ChartButtonSection(
+    onChartClick: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
-    ){
-        // list label
+    ) {
         Text(
             text = "Your Journals",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold
         )
-        //chart button
+
         Button(
-            onClick = {}
-        ){
+            onClick = onChartClick
+        ) {
             Text(text = "CHART")
         }
     }
