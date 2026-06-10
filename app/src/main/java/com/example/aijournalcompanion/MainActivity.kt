@@ -37,6 +37,10 @@ import com.example.aijournalcompanion.utils.SearchUtils
 import com.example.aijournalcompanion.ui.PieChartDialog
 import androidx.compose.ui.platform.LocalContext
 import com.example.aijournalcompanion.ui.HelpDialog
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -165,8 +169,24 @@ fun MainScreen() {
         }
 
 
+        item {
+            TrashZone()
+        }
+
         items(displayList) { card ->
-            JournalCard(card = card)
+            DraggableJournalCard(
+                card = card,
+                onDelete = {
+                    journalList.remove(card)
+                    searchResultList.remove(card)
+
+                    if (journalList.isEmpty()) {
+                        searchResultList.clear()
+                        isSearching = false
+                    }
+                }
+            )
+
             Spacer(modifier = Modifier.height(8.dp))
         }
 
@@ -517,5 +537,62 @@ fun JournalCard(card: JournalEntry){
                 fontSize = 11.sp
             )
         }
+    }
+}
+
+@Composable
+fun TrashZone() {
+    OutlinedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "🗑 Drag a journal card up here to delete",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+fun DraggableJournalCard(
+    card: JournalEntry,
+    onDelete: () -> Unit
+) {
+    var offsetY by remember { mutableStateOf(0f) }
+
+    Box(
+        modifier = Modifier
+            .offset {
+                IntOffset(
+                    x = 0,
+                    y = offsetY.roundToInt()
+                )
+            }
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDragEnd = {
+                        if (offsetY < -30f) {
+                            onDelete()
+                        }
+                        offsetY = 0f
+                    },
+                    onDragCancel = {
+                        offsetY = 0f
+                    },
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        offsetY += dragAmount.y
+                    }
+                )
+            }
+    ) {
+        JournalCard(card = card)
     }
 }
